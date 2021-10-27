@@ -1,5 +1,4 @@
 (function () {
-    "use strict";
   
     let forms = document.querySelectorAll('.email-form');
   
@@ -10,9 +9,8 @@
         let thisForm = this;
   
         let action = thisForm.getAttribute('action');
-        let recaptcha = thisForm.getAttribute('data-recaptcha-site-key');
         
-        if( ! action ) {
+        if( !action ) {
           displayError(thisForm, 'The form action property is not set!')
           return;
         }
@@ -21,45 +19,19 @@
         thisForm.querySelector('.sent-message').classList.remove('d-block');
   
         let formData = new FormData( thisForm );
-  
-        if ( recaptcha ) {
-          if(typeof grecaptcha !== "undefined" ) {
-            grecaptcha.ready(function() {
-              try {
-                grecaptcha.execute(recaptcha, {action: 'email_form_submit'})
-                .then(token => {
-                  formData.set('recaptcha-response', token);
-                  email_form_submit(thisForm, action, formData);
-                })
-              } catch(error) {
-                displayError(thisForm, error)
-              }
-            });
-          } else {
-            displayError(thisForm, 'The reCaptcha javascript API url is not loaded!')
-          }
-        } else {
-          email_form_submit(thisForm, action, formData);
-        }
+
+        email_form_submit(thisForm, action, formData);
       });
     });
   
     function email_form_submit(thisForm, action, formData) {
       fetch(action, {
         method: 'POST',
-        body: formData,
-        headers: {'X-Requested-With': 'XMLHttpRequest'}
-      })
-      .then(response => {
-        if( response.ok ) {
-          return response.text()
-        } else {
-          throw new Error(`${response.status} ${response.statusText} ${response.url}`); 
-        }
+        body: formData
       })
       .then(data => {
         thisForm.querySelector('.loading').classList.remove('d-block');
-        if (data.trim() == 'OK') {
+        if (action) {
           thisForm.querySelector('.sent-message').classList.add('d-block');
           thisForm.reset(); 
         } else {
@@ -74,7 +46,7 @@
     function displayError(thisForm, error) {
       thisForm.querySelector('.loading').classList.remove('d-block');
       thisForm.querySelector('.error-message').innerHTML = error;
-      thisForm.querySelector('.sent-message').classList.add('d-block');
+      thisForm.querySelector('.error-message').classList.add('d-block');
     }
   
   })();
